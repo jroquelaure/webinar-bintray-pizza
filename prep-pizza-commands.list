@@ -1,0 +1,14 @@
+cd .\pizza\
+
+tar -cvf pizza-1.0.tgz exec
+cp .\pizza\pizza-1.0.tgz  .
+
+#upload the generic package to artifactory
+jfrog rt u pizza-1.0.tgz generic-local/jfrog/bintray/bintray-webinar/pizza/
+
+#build the docker image
+docker build -t ubuntu:5001/pizza:1.0 .
+
+#push the docker image
+docker login ubuntu:5001 -u admin
+docker push ubuntu:5001/pizza:1.0
