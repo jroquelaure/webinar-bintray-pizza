@@ -1,14 +1,44 @@
-cd .\pizza\
+#go workspace and execute ps1 scripts
 
-tar -cvf pizza-1.0.tgz exec
-cp .\pizza\pizza-1.0.tgz  .
+#distribute the generic package
+curl -uadmin  -X POST http://ubuntu:8081/artifactory/api/distribute  -H "Content-Type: application/json" -T distrib.json
 
-#upload the generic package to artifactory
-jfrog rt u pizza-1.0.tgz generic-local/jfrog/bintray/bintray-webinar/pizza/
+#then show
+see product, 2 packages
+edit product, add logo, description...
 
-#build the docker image
-docker build -t ubuntu:5001/pizza:1.0 .
+EULA
+add new EULA
+_All_ your base belong to *us*
 
-#push the docker image
-docker login ubuntu:5001 -u admin
-docker push ubuntu:5001/pizza:1.0
+attach the eula to version 1.0 (which will be for docker and tgz because baserev and tagg are considered as version for the product)
+
+New question : how to give access to the files?
+    - create 1 user in bintray and manage permission in bintray
+    => this is not what customer are doing, they want to manage entitlements and give acces key
+
+#create access key
+jfrog bt acc-keys --org=jfrog-int create pizza-webinar-jr
+
+#create an entitlement to give read permisssion
+jfrog bt ent --access=r --keys=pizza-webinar-jr create jfrog-int/pizza-registry-jr
+jfrog bt ent --access=r --keys=pizza-webinar-jr create jfrog-int/pizza-generic-jr
+
+#download the file using entitlement (first attempt failed because EULA is not signed)
+curl -L -upizza-webinar-jr@jfrog-int "https://jfrog-int.bintray.com/pizza-generic-jr/jfrog/bintray/bintray-webinar/pizza/pizza-1.0.tgz" -o pizza.tgz -k -v
+
+#go  to https://bintray.com/jfrog-int/product/pizza-test-jr/1.0/accept_eula and sign in and accept eula,
+
+#SHOW THE EULA TRACKING page and eventually detailed permission on repo
+
+# then re download
+
+#then docker login
+docker login -u pizza-webinar-jr@jfrog-int  jfrog-int-docker-pizza-test-jr.bintray.io
+
+#finally pull the image
+docker pull jfrog-int-docker-pizza-test-jr.bintray.io/pizza:1.0
+
+Q?
+How do I embed this in my website (I don't want to go to Bintray UI) => the question is in fact how I connect a nice UI provided by my front end devs to Bintray => answer is throught the REST API
+what is the diff between product and repositories?
